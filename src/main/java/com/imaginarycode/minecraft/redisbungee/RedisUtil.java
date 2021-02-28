@@ -17,8 +17,9 @@ import java.util.UUID;
 public class RedisUtil {
     protected static void createPlayer(ProxiedPlayer player, Pipeline pipeline, boolean fireEvent) {
         createPlayer(player.getPendingConnection(), pipeline, fireEvent);
-        if (player.getServer() != null)
+        if (player.getServer() != null) {
             pipeline.hset("player:" + player.getUniqueId().toString(), "server", player.getServer().getInfo().getName());
+        }
     }
 
     protected static void createPlayer(PendingConnection connection, Pipeline pipeline, boolean fireEvent) {

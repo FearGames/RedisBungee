@@ -48,35 +48,32 @@ class RedisBungeeCommands {
 
         @Override
         public void execute(final CommandSender sender, final String[] args) {
-            plugin.getProxy().getScheduler().runAsync(plugin, new Runnable() {
-                @Override
-                public void run() {
-                    int count = RedisBungee.getApi().getPlayerCount();
-                    BaseComponent[] playersOnline = new ComponentBuilder("").color(ChatColor.YELLOW)
-                            .append(playerPlural(count) + " currently online.").create();
-                    if (args.length > 0 && args[0].equals("showall")) {
-                        Multimap<String, UUID> serverToPlayers = RedisBungee.getApi().getServerToPlayers();
-                        Multimap<String, String> human = HashMultimap.create();
-                        for (Map.Entry<String, UUID> entry : serverToPlayers.entries()) {
-                            human.put(entry.getKey(), plugin.getUuidTranslator().getNameFromUuid(entry.getValue(), false));
-                        }
-                        for (String server : new TreeSet<>(serverToPlayers.keySet())) {
-                            TextComponent serverName = new TextComponent();
-                            serverName.setColor(ChatColor.GREEN);
-                            serverName.setText("[" + server + "] ");
-                            TextComponent serverCount = new TextComponent();
-                            serverCount.setColor(ChatColor.YELLOW);
-                            serverCount.setText("(" + serverToPlayers.get(server).size() + "): ");
-                            TextComponent serverPlayers = new TextComponent();
-                            serverPlayers.setColor(ChatColor.WHITE);
-                            serverPlayers.setText(Joiner.on(", ").join(human.get(server)));
-                            sender.sendMessage(serverName, serverCount, serverPlayers);
-                        }
-                        sender.sendMessage(playersOnline);
-                    } else {
-                        sender.sendMessage(playersOnline);
-                        sender.sendMessage(new ComponentBuilder("To see all players online, use /glist showall.").color(ChatColor.YELLOW).create());
+            plugin.getProxy().getScheduler().runAsync(plugin, () -> {
+                int count = RedisBungee.getApi().getPlayerCount();
+                BaseComponent[] playersOnline = new ComponentBuilder("").color(ChatColor.YELLOW)
+                        .append(playerPlural(count) + " currently online.").create();
+                if (args.length > 0 && args[0].equals("showall")) {
+                    Multimap<String, UUID> serverToPlayers = RedisBungee.getApi().getServerToPlayers();
+                    Multimap<String, String> human = HashMultimap.create();
+                    for (Map.Entry<String, UUID> entry : serverToPlayers.entries()) {
+                        human.put(entry.getKey(), plugin.getUuidTranslator().getNameFromUuid(entry.getValue(), false));
                     }
+                    for (String server : new TreeSet<>(serverToPlayers.keySet())) {
+                        TextComponent serverName = new TextComponent();
+                        serverName.setColor(ChatColor.GREEN);
+                        serverName.setText("[" + server + "] ");
+                        TextComponent serverCount = new TextComponent();
+                        serverCount.setColor(ChatColor.YELLOW);
+                        serverCount.setText("(" + serverToPlayers.get(server).size() + "): ");
+                        TextComponent serverPlayers = new TextComponent();
+                        serverPlayers.setColor(ChatColor.WHITE);
+                        serverPlayers.setText(Joiner.on(", ").join(human.get(server)));
+                        sender.sendMessage(serverName, serverCount, serverPlayers);
+                    }
+                    sender.sendMessage(playersOnline);
+                } else {
+                    sender.sendMessage(playersOnline);
+                    sender.sendMessage(new ComponentBuilder("To see all players online, use /glist showall.").color(ChatColor.YELLOW).create());
                 }
             });
         }
@@ -92,27 +89,24 @@ class RedisBungeeCommands {
 
         @Override
         public void execute(final CommandSender sender, final String[] args) {
-            plugin.getProxy().getScheduler().runAsync(plugin, new Runnable() {
-                @Override
-                public void run() {
-                    if (args.length > 0) {
-                        UUID uuid = plugin.getUuidTranslator().getTranslatedUuid(args[0], true);
-                        if (uuid == null) {
-                            sender.sendMessage(PLAYER_NOT_FOUND);
-                            return;
-                        }
-                        ServerInfo si = RedisBungee.getApi().getServerFor(uuid);
-                        if (si != null) {
-                            TextComponent message = new TextComponent();
-                            message.setColor(ChatColor.BLUE);
-                            message.setText(args[0] + " is on " + si.getName() + ".");
-                            sender.sendMessage(message);
-                        } else {
-                            sender.sendMessage(PLAYER_NOT_FOUND);
-                        }
-                    } else {
-                        sender.sendMessage(NO_PLAYER_SPECIFIED);
+            plugin.getProxy().getScheduler().runAsync(plugin, () -> {
+                if (args.length > 0) {
+                    UUID uuid = plugin.getUuidTranslator().getTranslatedUuid(args[0], true);
+                    if (uuid == null) {
+                        sender.sendMessage(PLAYER_NOT_FOUND);
+                        return;
                     }
+                    ServerInfo si = RedisBungee.getApi().getServerFor(uuid);
+                    if (si != null) {
+                        TextComponent message = new TextComponent();
+                        message.setColor(ChatColor.BLUE);
+                        message.setText(args[0] + " is on " + si.getName() + ".");
+                        sender.sendMessage(message);
+                    } else {
+                        sender.sendMessage(PLAYER_NOT_FOUND);
+                    }
+                } else {
+                    sender.sendMessage(NO_PLAYER_SPECIFIED);
                 }
             });
         }
@@ -128,31 +122,28 @@ class RedisBungeeCommands {
 
         @Override
         public void execute(final CommandSender sender, final String[] args) {
-            plugin.getProxy().getScheduler().runAsync(plugin, new Runnable() {
-                @Override
-                public void run() {
-                    if (args.length > 0) {
-                        UUID uuid = plugin.getUuidTranslator().getTranslatedUuid(args[0], true);
-                        if (uuid == null) {
-                            sender.sendMessage(PLAYER_NOT_FOUND);
-                            return;
-                        }
-                        long secs = RedisBungee.getApi().getLastOnline(uuid);
-                        TextComponent message = new TextComponent();
-                        if (secs == 0) {
-                            message.setColor(ChatColor.GREEN);
-                            message.setText(args[0] + " is currently online.");
-                        } else if (secs != -1) {
-                            message.setColor(ChatColor.BLUE);
-                            message.setText(args[0] + " was last online on " + new SimpleDateFormat().format(secs) + ".");
-                        } else {
-                            message.setColor(ChatColor.RED);
-                            message.setText(args[0] + " has never been online.");
-                        }
-                        sender.sendMessage(message);
-                    } else {
-                        sender.sendMessage(NO_PLAYER_SPECIFIED);
+            plugin.getProxy().getScheduler().runAsync(plugin, () -> {
+                if (args.length > 0) {
+                    UUID uuid = plugin.getUuidTranslator().getTranslatedUuid(args[0], true);
+                    if (uuid == null) {
+                        sender.sendMessage(PLAYER_NOT_FOUND);
+                        return;
                     }
+                    long secs = RedisBungee.getApi().getLastOnline(uuid);
+                    TextComponent message = new TextComponent();
+                    if (secs == 0) {
+                        message.setColor(ChatColor.GREEN);
+                        message.setText(args[0] + " is currently online.");
+                    } else if (secs != -1) {
+                        message.setColor(ChatColor.BLUE);
+                        message.setText(args[0] + " was last online on " + new SimpleDateFormat().format(secs) + ".");
+                    } else {
+                        message.setColor(ChatColor.RED);
+                        message.setText(args[0] + " has never been online.");
+                    }
+                    sender.sendMessage(message);
+                } else {
+                    sender.sendMessage(NO_PLAYER_SPECIFIED);
                 }
             });
         }
@@ -168,27 +159,24 @@ class RedisBungeeCommands {
 
         @Override
         public void execute(final CommandSender sender, final String[] args) {
-            plugin.getProxy().getScheduler().runAsync(plugin, new Runnable() {
-                @Override
-                public void run() {
-                    if (args.length > 0) {
-                        UUID uuid = plugin.getUuidTranslator().getTranslatedUuid(args[0], true);
-                        if (uuid == null) {
-                            sender.sendMessage(PLAYER_NOT_FOUND);
-                            return;
-                        }
-                        InetAddress ia = RedisBungee.getApi().getPlayerIp(uuid);
-                        if (ia != null) {
-                            TextComponent message = new TextComponent();
-                            message.setColor(ChatColor.GREEN);
-                            message.setText(args[0] + " is connected from " + ia.toString() + ".");
-                            sender.sendMessage(message);
-                        } else {
-                            sender.sendMessage(PLAYER_NOT_FOUND);
-                        }
-                    } else {
-                        sender.sendMessage(NO_PLAYER_SPECIFIED);
+            plugin.getProxy().getScheduler().runAsync(plugin, () -> {
+                if (args.length > 0) {
+                    UUID uuid = plugin.getUuidTranslator().getTranslatedUuid(args[0], true);
+                    if (uuid == null) {
+                        sender.sendMessage(PLAYER_NOT_FOUND);
+                        return;
                     }
+                    InetAddress ia = RedisBungee.getApi().getPlayerIp(uuid);
+                    if (ia != null) {
+                        TextComponent message = new TextComponent();
+                        message.setColor(ChatColor.GREEN);
+                        message.setText(args[0] + " is connected from " + ia.toString() + ".");
+                        sender.sendMessage(message);
+                    } else {
+                        sender.sendMessage(PLAYER_NOT_FOUND);
+                    }
+                } else {
+                    sender.sendMessage(NO_PLAYER_SPECIFIED);
                 }
             });
         }
@@ -204,38 +192,33 @@ class RedisBungeeCommands {
 
         @Override
         public void execute(final CommandSender sender, final String[] args) {
-            plugin.getProxy().getScheduler().runAsync(plugin, new Runnable() {
-                @Override
-                public void run() {
-                    if (args.length > 0) {
-                        UUID uuid = plugin.getUuidTranslator().getTranslatedUuid(args[0], true);
-                        if (uuid == null) {
-                            sender.sendMessage(PLAYER_NOT_FOUND);
-                            return;
-                        }
-                        String proxy = RedisBungee.getApi().getProxy(uuid);
-                        if (proxy != null) {
-                            TextComponent message = new TextComponent();
-                            message.setColor(ChatColor.GREEN);
-                            message.setText(args[0] + " is connected to " + proxy + ".");
-                            sender.sendMessage(message);
-                        } else {
-                            sender.sendMessage(PLAYER_NOT_FOUND);
-                        }
-                    } else {
-                        sender.sendMessage(NO_PLAYER_SPECIFIED);
+            plugin.getProxy().getScheduler().runAsync(plugin, () -> {
+                if (args.length > 0) {
+                    UUID uuid = plugin.getUuidTranslator().getTranslatedUuid(args[0], true);
+                    if (uuid == null) {
+                        sender.sendMessage(PLAYER_NOT_FOUND);
+                        return;
                     }
+                    String proxy = RedisBungee.getApi().getProxy(uuid);
+                    if (proxy != null) {
+                        TextComponent message = new TextComponent();
+                        message.setColor(ChatColor.GREEN);
+                        message.setText(args[0] + " is connected to " + proxy + ".");
+                        sender.sendMessage(message);
+                    } else {
+                        sender.sendMessage(PLAYER_NOT_FOUND);
+                    }
+                } else {
+                    sender.sendMessage(NO_PLAYER_SPECIFIED);
                 }
             });
         }
     }
 
     public static class SendToAll extends Command {
-        private final RedisBungee plugin;
 
-        SendToAll(RedisBungee plugin) {
+        SendToAll() {
             super("sendtoall", "redisbungee.command.sendtoall", "rsendtoall");
-            this.plugin = plugin;
         }
 
         @Override
@@ -254,11 +237,9 @@ class RedisBungeeCommands {
     }
 
     public static class ServerId extends Command {
-        private final RedisBungee plugin;
 
-        ServerId(RedisBungee plugin) {
+        ServerId() {
             super("serverid", "redisbungee.command.serverid", "rserverid");
-            this.plugin = plugin;
         }
 
         @Override
@@ -294,42 +275,39 @@ class RedisBungeeCommands {
 
         @Override
         public void execute(final CommandSender sender, final String[] args) {
-            plugin.getProxy().getScheduler().runAsync(plugin, new Runnable() {
-                @Override
-                public void run() {
-                    String proxy = args.length >= 1 ? args[0] : RedisBungee.getConfiguration().getServerId();
-                    if (!plugin.getServerIds().contains(proxy)) {
-                        sender.sendMessage(new ComponentBuilder(proxy + " is not a valid proxy. See /serverids for valid proxies.").color(ChatColor.RED).create());
-                        return;
-                    }
-                    Set<UUID> players = RedisBungee.getApi().getPlayersOnProxy(proxy);
-                    BaseComponent[] playersOnline = new ComponentBuilder("").color(ChatColor.YELLOW)
-                            .append(playerPlural(players.size()) + " currently on proxy " + proxy + ".").create();
-                    if (args.length >= 2 && args[1].equals("showall")) {
-                        Multimap<String, UUID> serverToPlayers = RedisBungee.getApi().getServerToPlayers();
-                        Multimap<String, String> human = HashMultimap.create();
-                        for (Map.Entry<String, UUID> entry : serverToPlayers.entries()) {
-                            if (players.contains(entry.getValue())) {
-                                human.put(entry.getKey(), plugin.getUuidTranslator().getNameFromUuid(entry.getValue(), false));
-                            }
+            plugin.getProxy().getScheduler().runAsync(plugin, () -> {
+                String proxy = args.length >= 1 ? args[0] : RedisBungee.getConfiguration().getServerId();
+                if (!plugin.getServerIds().contains(proxy)) {
+                    sender.sendMessage(new ComponentBuilder(proxy + " is not a valid proxy. See /serverids for valid proxies.").color(ChatColor.RED).create());
+                    return;
+                }
+                Set<UUID> players = RedisBungee.getApi().getPlayersOnProxy(proxy);
+                BaseComponent[] playersOnline = new ComponentBuilder("").color(ChatColor.YELLOW)
+                        .append(playerPlural(players.size()) + " currently on proxy " + proxy + ".").create();
+                if (args.length >= 2 && args[1].equals("showall")) {
+                    Multimap<String, UUID> serverToPlayers = RedisBungee.getApi().getServerToPlayers();
+                    Multimap<String, String> human = HashMultimap.create();
+                    for (Map.Entry<String, UUID> entry : serverToPlayers.entries()) {
+                        if (players.contains(entry.getValue())) {
+                            human.put(entry.getKey(), plugin.getUuidTranslator().getNameFromUuid(entry.getValue(), false));
                         }
-                        for (String server : new TreeSet<>(human.keySet())) {
-                            TextComponent serverName = new TextComponent();
-                            serverName.setColor(ChatColor.RED);
-                            serverName.setText("[" + server + "] ");
-                            TextComponent serverCount = new TextComponent();
-                            serverCount.setColor(ChatColor.YELLOW);
-                            serverCount.setText("(" + human.get(server).size() + "): ");
-                            TextComponent serverPlayers = new TextComponent();
-                            serverPlayers.setColor(ChatColor.WHITE);
-                            serverPlayers.setText(Joiner.on(", ").join(human.get(server)));
-                            sender.sendMessage(serverName, serverCount, serverPlayers);
-                        }
-                        sender.sendMessage(playersOnline);
-                    } else {
-                        sender.sendMessage(playersOnline);
-                        sender.sendMessage(new ComponentBuilder("To see all players online, use /plist " + proxy + " showall.").color(ChatColor.YELLOW).create());
                     }
+                    for (String server : new TreeSet<>(human.keySet())) {
+                        TextComponent serverName = new TextComponent();
+                        serverName.setColor(ChatColor.RED);
+                        serverName.setText("[" + server + "] ");
+                        TextComponent serverCount = new TextComponent();
+                        serverCount.setColor(ChatColor.YELLOW);
+                        serverCount.setText("(" + human.get(server).size() + "): ");
+                        TextComponent serverPlayers = new TextComponent();
+                        serverPlayers.setColor(ChatColor.WHITE);
+                        serverPlayers.setText(Joiner.on(", ").join(human.get(server)));
+                        sender.sendMessage(serverName, serverCount, serverPlayers);
+                    }
+                    sender.sendMessage(playersOnline);
+                } else {
+                    sender.sendMessage(playersOnline);
+                    sender.sendMessage(new ComponentBuilder("To see all players online, use /plist " + proxy + " showall.").color(ChatColor.YELLOW).create());
                 }
             });
         }

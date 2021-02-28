@@ -57,21 +57,20 @@ public class DataManager implements Listener {
     public String getServer(final UUID uuid) {
         ProxiedPlayer player = plugin.getProxy().getPlayer(uuid);
 
-        if (player != null)
+        if (player != null) {
             return player.getServer() != null ? player.getServer().getInfo().getName() : null;
+        }
 
         try {
-            return serverCache.get(uuid, new Callable<String>() {
-                @Override
-                public String call() throws Exception {
-                    try (Jedis tmpRsc = plugin.getPool().getResource()) {
-                        return Objects.requireNonNull(tmpRsc.hget("player:" + uuid, "server"), "user not found");
-                    }
+            return serverCache.get(uuid, () -> {
+                try (Jedis tmpRsc = plugin.getPool().getResource()) {
+                    return Objects.requireNonNull(tmpRsc.hget("player:" + uuid, "server"), "user not found");
                 }
             });
         } catch (ExecutionException | UncheckedExecutionException e) {
-            if (e.getCause() instanceof NullPointerException && e.getCause().getMessage().equals("user not found"))
+            if (e.getCause() instanceof NullPointerException && e.getCause().getMessage().equals("user not found")) {
                 return null; // HACK
+            }
             plugin.getLogger().log(Level.SEVERE, "Unable to get server", e);
             throw new RuntimeException("Unable to get server for " + uuid, e);
         }
@@ -80,21 +79,20 @@ public class DataManager implements Listener {
     public String getProxy(final UUID uuid) {
         ProxiedPlayer player = plugin.getProxy().getPlayer(uuid);
 
-        if (player != null)
+        if (player != null) {
             return RedisBungee.getConfiguration().getServerId();
+        }
 
         try {
-            return proxyCache.get(uuid, new Callable<String>() {
-                @Override
-                public String call() throws Exception {
-                    try (Jedis tmpRsc = plugin.getPool().getResource()) {
-                        return Objects.requireNonNull(tmpRsc.hget("player:" + uuid, "proxy"), "user not found");
-                    }
+            return proxyCache.get(uuid, () -> {
+                try (Jedis tmpRsc = plugin.getPool().getResource()) {
+                    return Objects.requireNonNull(tmpRsc.hget("player:" + uuid, "proxy"), "user not found");
                 }
             });
         } catch (ExecutionException | UncheckedExecutionException e) {
-            if (e.getCause() instanceof NullPointerException && e.getCause().getMessage().equals("user not found"))
+            if (e.getCause() instanceof NullPointerException && e.getCause().getMessage().equals("user not found")) {
                 return null; // HACK
+            }
             plugin.getLogger().log(Level.SEVERE, "Unable to get proxy", e);
             throw new RuntimeException("Unable to get proxy for " + uuid, e);
         }
@@ -103,24 +101,24 @@ public class DataManager implements Listener {
     public InetAddress getIp(final UUID uuid) {
         ProxiedPlayer player = plugin.getProxy().getPlayer(uuid);
 
-        if (player != null)
+        if (player != null) {
             return player.getAddress().getAddress();
+        }
 
         try {
-            return ipCache.get(uuid, new Callable<InetAddress>() {
-                @Override
-                public InetAddress call() throws Exception {
-                    try (Jedis tmpRsc = plugin.getPool().getResource()) {
-                        String result = tmpRsc.hget("player:" + uuid, "ip");
-                        if (result == null)
-                            throw new NullPointerException("user not found");
-                        return InetAddresses.forString(result);
+            return ipCache.get(uuid, () -> {
+                try (Jedis tmpRsc = plugin.getPool().getResource()) {
+                    String result = tmpRsc.hget("player:" + uuid, "ip");
+                    if (result == null) {
+                        throw new NullPointerException("user not found");
                     }
+                    return InetAddresses.forString(result);
                 }
             });
         } catch (ExecutionException | UncheckedExecutionException e) {
-            if (e.getCause() instanceof NullPointerException && e.getCause().getMessage().equals("user not found"))
+            if (e.getCause() instanceof NullPointerException && e.getCause().getMessage().equals("user not found")) {
                 return null; // HACK
+            }
             plugin.getLogger().log(Level.SEVERE, "Unable to get IP", e);
             throw new RuntimeException("Unable to get IP for " + uuid, e);
         }
@@ -129,17 +127,15 @@ public class DataManager implements Listener {
     public long getLastOnline(final UUID uuid) {
         ProxiedPlayer player = plugin.getProxy().getPlayer(uuid);
 
-        if (player != null)
+        if (player != null) {
             return 0;
+        }
 
         try {
-            return lastOnlineCache.get(uuid, new Callable<Long>() {
-                @Override
-                public Long call() throws Exception {
-                    try (Jedis tmpRsc = plugin.getPool().getResource()) {
-                        String result = tmpRsc.hget("player:" + uuid, "online");
-                        return result == null ? -1 : Long.valueOf(result);
-                    }
+            return lastOnlineCache.get(uuid, () -> {
+                try (Jedis tmpRsc = plugin.getPool().getResource()) {
+                    String result = tmpRsc.hget("player:" + uuid, "online");
+                    return result == null ? -1 : Long.parseLong(result);
                 }
             });
         } catch (ExecutionException e) {
@@ -169,16 +165,18 @@ public class DataManager implements Listener {
 
     @EventHandler
     public void onPubSubMessage(PubSubMessageEvent event) {
-        if (!event.getChannel().equals("redisbungee-data"))
+        if (!event.getChannel().equals("redisbungee-data")) {
             return;
+        }
 
         // Partially deserialize the message so we can look at the action
         JsonObject jsonObject = parser.parse(event.getMessage()).getAsJsonObject();
 
         String source = jsonObject.get("source").getAsString();
 
-        if (source.equals(RedisBungee.getConfiguration().getServerId()))
+        if (source.equals(RedisBungee.getConfiguration().getServerId())) {
             return;
+        }
 
         DataManagerMessage.Action action = DataManagerMessage.Action.valueOf(jsonObject.get("action").getAsString());
 
@@ -189,35 +187,20 @@ public class DataManager implements Listener {
                 proxyCache.put(message1.getTarget(), message1.getSource());
                 lastOnlineCache.put(message1.getTarget(), (long) 0);
                 ipCache.put(message1.getTarget(), message1.getPayload().getAddress());
-                plugin.getProxy().getScheduler().runAsync(plugin, new Runnable() {
-                    @Override
-                    public void run() {
-                        plugin.getProxy().getPluginManager().callEvent(new PlayerJoinedNetworkEvent(message1.getTarget()));
-                    }
-                });
+                plugin.getProxy().getScheduler().runAsync(plugin, () -> plugin.getProxy().getPluginManager().callEvent(new PlayerJoinedNetworkEvent(message1.getTarget())));
                 break;
             case LEAVE:
                 final DataManagerMessage<LogoutPayload> message2 = RedisBungee.getGson().fromJson(jsonObject, new TypeToken<DataManagerMessage<LogoutPayload>>() {
                 }.getType());
                 invalidate(message2.getTarget());
                 lastOnlineCache.put(message2.getTarget(), message2.getPayload().getTimestamp());
-                plugin.getProxy().getScheduler().runAsync(plugin, new Runnable() {
-                    @Override
-                    public void run() {
-                        plugin.getProxy().getPluginManager().callEvent(new PlayerLeftNetworkEvent(message2.getTarget()));
-                    }
-                });
+                plugin.getProxy().getScheduler().runAsync(plugin, () -> plugin.getProxy().getPluginManager().callEvent(new PlayerLeftNetworkEvent(message2.getTarget())));
                 break;
             case SERVER_CHANGE:
                 final DataManagerMessage<ServerChangePayload> message3 = RedisBungee.getGson().fromJson(jsonObject, new TypeToken<DataManagerMessage<ServerChangePayload>>() {
                 }.getType());
                 serverCache.put(message3.getTarget(), message3.getPayload().getServer());
-                plugin.getProxy().getScheduler().runAsync(plugin, new Runnable() {
-                    @Override
-                    public void run() {
-                        plugin.getProxy().getPluginManager().callEvent(new PlayerChangedServerNetworkEvent(message3.getTarget(), message3.getPayload().getOldServer(), message3.getPayload().getServer()));
-                    }
-                });
+                plugin.getProxy().getScheduler().runAsync(plugin, () -> plugin.getProxy().getPluginManager().callEvent(new PlayerChangedServerNetworkEvent(message3.getTarget(), message3.getPayload().getOldServer(), message3.getPayload().getServer())));
                 break;
         }
     }

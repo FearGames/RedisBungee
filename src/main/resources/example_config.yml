@@ -7,6 +7,9 @@ redis-server: 127.0.0.1
 redis-port: 6379
 # OPTIONAL: If your Redis server uses AUTH, set the password required.
 redis-password: ""
+# Enable redis connection using SSL, only supported since redis 6.
+redis-ssl: false
+
 # Maximum connections that will be maintained to the Redis server.
 # The default is 8. This setting should be left as-is unless you have some wildly
 # inefficient plugins or a lot of players.

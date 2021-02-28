@@ -41,16 +41,18 @@ public final class UUIDTranslator {
     public final UUID getTranslatedUuid(@NonNull String player, boolean expensiveLookups) {
         // If the player is online, give them their UUID.
         // Remember, local data > remote data.
-        if (ProxyServer.getInstance().getPlayer(player) != null)
+        if (ProxyServer.getInstance().getPlayer(player) != null) {
             return ProxyServer.getInstance().getPlayer(player).getUniqueId();
+        }
 
         // Check if it exists in the map
         CachedUUIDEntry cachedUUIDEntry = nameToUuidMap.get(player.toLowerCase());
         if (cachedUUIDEntry != null) {
-            if (!cachedUUIDEntry.expired())
+            if (!cachedUUIDEntry.expired()) {
                 return cachedUUIDEntry.getUuid();
-            else
+            } else {
                 nameToUuidMap.remove(player);
+            }
         }
 
         // Check if we can exit early
@@ -89,8 +91,9 @@ public final class UUIDTranslator {
             }
 
             // That didn't work. Let's ask Mojang.
-            if (!expensiveLookups || !ProxyServer.getInstance().getConfig().isOnlineMode())
+            if (!expensiveLookups || !ProxyServer.getInstance().getConfig().isOnlineMode()) {
                 return null;
+            }
 
             Map<String, UUID> uuidMap1;
             try {
@@ -115,16 +118,18 @@ public final class UUIDTranslator {
     public final String getNameFromUuid(@NonNull UUID player, boolean expensiveLookups) {
         // If the player is online, give them their UUID.
         // Remember, local data > remote data.
-        if (ProxyServer.getInstance().getPlayer(player) != null)
+        if (ProxyServer.getInstance().getPlayer(player) != null) {
             return ProxyServer.getInstance().getPlayer(player).getName();
+        }
 
         // Check if it exists in the map
         CachedUUIDEntry cachedUUIDEntry = uuidToNameMap.get(player);
         if (cachedUUIDEntry != null) {
-            if (!cachedUUIDEntry.expired())
+            if (!cachedUUIDEntry.expired()) {
                 return cachedUUIDEntry.getName();
-            else
+            } else {
                 uuidToNameMap.remove(player);
+            }
         }
 
         // Okay, it wasn't locally cached. Let's try Redis.
@@ -147,8 +152,9 @@ public final class UUIDTranslator {
                 }
             }
 
-            if (!expensiveLookups || !ProxyServer.getInstance().getConfig().isOnlineMode())
+            if (!expensiveLookups || !ProxyServer.getInstance().getConfig().isOnlineMode()) {
                 return null;
+            }
 
             // That didn't work. Let's ask Mojang. This call may fail, because Mojang is insane.
             String name;
@@ -186,7 +192,7 @@ public final class UUIDTranslator {
 
     @RequiredArgsConstructor
     @Getter
-    private class CachedUUIDEntry {
+    private static class CachedUUIDEntry {
         private final String name;
         private final UUID uuid;
         private final Calendar expiry;

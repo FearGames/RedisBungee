@@ -2,8 +2,8 @@ package com.imaginarycode.minecraft.redisbungee.util.uuid;
 
 import com.google.common.collect.ImmutableList;
 import com.imaginarycode.minecraft.redisbungee.RedisBungee;
-import com.squareup.okhttp.*;
 import lombok.Setter;
+import okhttp3.*;
 
 import java.util.HashMap;
 import java.util.List;
@@ -40,7 +40,7 @@ public class UUIDFetcher implements Callable<Map<String, UUID>> {
         int requests = (int) Math.ceil(names.size() / PROFILES_PER_REQUEST);
         for (int i = 0; i < requests; i++) {
             String body = RedisBungee.getGson().toJson(names.subList(i * 100, Math.min((i + 1) * 100, names.size())));
-            Request request = new Request.Builder().url(PROFILE_URL).post(RequestBody.create(JSON, body)).build();
+            Request request = new Request.Builder().url(PROFILE_URL).post(RequestBody.create(body, JSON)).build();
             ResponseBody responseBody = httpClient.newCall(request).execute().body();
             String response = responseBody.string();
             responseBody.close();

@@ -2,12 +2,12 @@ package com.imaginarycode.minecraft.redisbungee.util.uuid;
 
 import com.google.gson.reflect.TypeToken;
 import com.imaginarycode.minecraft.redisbungee.RedisBungee;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.ResponseBody;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.ResponseBody;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -38,6 +38,7 @@ public class NameFetcher {
         return humanNames;
     }
 
+    @SuppressWarnings("unused")
     public static class Name {
         private String name;
         private long changedToAt;
