@@ -28,20 +28,32 @@ import redis.clients.jedis.Pipeline;
 import java.net.InetAddress;
 import java.util.*;
 
-@AllArgsConstructor
 public class RedisBungeeListener implements Listener {
+    /*
     private static final BaseComponent[] ALREADY_LOGGED_IN =
             new ComponentBuilder("You are already logged on to this server.").color(ChatColor.RED)
                     .append("\n\nIt may help to try logging in again in a few minutes.\nIf this does not resolve your issue, please contact staff.")
                     .color(ChatColor.GRAY)
                     .create();
+
+     */
+
+    private final String ALREADY_LOGGED_IN;
+
     private static final BaseComponent[] ONLINE_MODE_RECONNECT =
             new ComponentBuilder("Whoops! You need to reconnect.").color(ChatColor.RED)
                     .append("\n\nWe found someone online using your username. They were kicked and you may reconnect.\nIf this does not work, please contact staff.")
                     .color(ChatColor.GRAY)
                     .create();
+
     private final RedisBungee plugin;
     private final List<InetAddress> exemptAddresses;
+
+    public RedisBungeeListener(RedisBungee plugin, List<InetAddress> exemptAddresses){
+        this.plugin = plugin;
+        this.exemptAddresses = exemptAddresses;
+        ALREADY_LOGGED_IN = plugin.getMessagesConfiguration().getKickMessages().getAlreadyConnectedMessage();
+    }
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onLogin(final LoginEvent event) {
@@ -71,7 +83,7 @@ public class RedisBungeeListener implements Listener {
                         if (jedis.sismember("proxy:" + s + ":usersOnline", event.getConnection().getUniqueId().toString())) {
                             event.setCancelled(true);
                             // TODO: Make it accept a BaseComponent[] like everything else.
-                            event.setCancelReason(TextComponent.toLegacyText(ALREADY_LOGGED_IN));
+                            event.setCancelReason(TextComponent.fromLegacyText(ALREADY_LOGGED_IN));
                             return null;
                         }
                     }

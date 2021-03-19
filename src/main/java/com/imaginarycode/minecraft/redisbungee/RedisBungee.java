@@ -8,6 +8,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.common.io.ByteStreams;
 import com.google.gson.Gson;
+import com.imaginarycode.minecraft.redisbungee.configuration.ConfigLoader;
+import com.imaginarycode.minecraft.redisbungee.configuration.configurations.MessagesConfiguration;
 import com.imaginarycode.minecraft.redisbungee.events.PubSubMessageEvent;
 import com.imaginarycode.minecraft.redisbungee.util.IOUtil;
 import com.imaginarycode.minecraft.redisbungee.util.LuaManager;
@@ -72,6 +74,9 @@ public final class RedisBungee extends Plugin {
     private final Cache<Object, Multimap<String, UUID>> serverToPlayersCache = CacheBuilder.newBuilder()
             .expireAfterWrite(5, TimeUnit.SECONDS)
             .build();
+
+    @Getter
+    private MessagesConfiguration messagesConfiguration;
 
     /**
      * Fetch the {@link RedisBungeeAPI} object created on plugin start.
@@ -222,6 +227,12 @@ public final class RedisBungee extends Plugin {
 
     @Override
     public void onEnable() {
+        try {
+            messagesConfiguration = ConfigLoader.loadConfig(new MessagesConfiguration(), MessagesConfiguration.class, new File("messages.json"));
+        } catch (IOException e) {
+            getLogger().log(Level.CONFIG, "Error loading messages config");
+            e.printStackTrace();
+        }
         ThreadFactory factory = ((ThreadPoolExecutor) getExecutorService()).getThreadFactory();
         getExecutorService().shutdownNow();
         ScheduledExecutorService service;
