@@ -35,16 +35,16 @@ public class RedisBungeeListener implements Listener {
                     .append("\n\nIt may help to try logging in again in a few minutes.\nIf this does not resolve your issue, please contact staff.")
                     .color(ChatColor.GRAY)
                     .create();
-
-     */
-
-    private final String ALREADY_LOGGED_IN;
-
     private static final BaseComponent[] ONLINE_MODE_RECONNECT =
             new ComponentBuilder("Whoops! You need to reconnect.").color(ChatColor.RED)
                     .append("\n\nWe found someone online using your username. They were kicked and you may reconnect.\nIf this does not work, please contact staff.")
                     .color(ChatColor.GRAY)
                     .create();
+     */
+
+    private final String ALREADY_LOGGED_IN;
+    private final String  ONLINE_MODE_RECONNECT;
+
 
     private final RedisBungee plugin;
     private final List<InetAddress> exemptAddresses;
@@ -53,6 +53,7 @@ public class RedisBungeeListener implements Listener {
         this.plugin = plugin;
         this.exemptAddresses = exemptAddresses;
         ALREADY_LOGGED_IN = plugin.getMessagesConfiguration().getKickMessages().getAlreadyConnectedMessage();
+        ONLINE_MODE_RECONNECT = plugin.getMessagesConfiguration().getKickMessages().getOnlineModeReconnect();
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
@@ -74,7 +75,7 @@ public class RedisBungeeListener implements Listener {
                         if (player != null) {
                             event.setCancelled(true);
                             // TODO: Make it accept a BaseComponent[] like everything else.
-                            event.setCancelReason(TextComponent.toLegacyText(ONLINE_MODE_RECONNECT));
+                            event.setCancelReason(ChatColor.translateAlternateColorCodes('&', ONLINE_MODE_RECONNECT));
                             return null;
                         }
                     }
@@ -83,7 +84,7 @@ public class RedisBungeeListener implements Listener {
                         if (jedis.sismember("proxy:" + s + ":usersOnline", event.getConnection().getUniqueId().toString())) {
                             event.setCancelled(true);
                             // TODO: Make it accept a BaseComponent[] like everything else.
-                            event.setCancelReason(TextComponent.fromLegacyText(ALREADY_LOGGED_IN));
+                            event.setCancelReason(ChatColor.translateAlternateColorCodes('&', ALREADY_LOGGED_IN));
                             return null;
                         }
                     }
