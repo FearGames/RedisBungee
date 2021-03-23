@@ -8,8 +8,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.common.io.ByteStreams;
 import com.google.gson.Gson;
-import com.imaginarycode.minecraft.redisbungee.configuration.ConfigLoader;
-import com.imaginarycode.minecraft.redisbungee.configuration.configurations.MessagesConfiguration;
 import com.imaginarycode.minecraft.redisbungee.events.PubSubMessageEvent;
 import com.imaginarycode.minecraft.redisbungee.util.IOUtil;
 import com.imaginarycode.minecraft.redisbungee.util.LuaManager;
@@ -228,9 +226,9 @@ public final class RedisBungee extends Plugin {
     @Override
     public void onEnable() {
         try {
-            messagesConfiguration = ConfigLoader.loadConfig(new MessagesConfiguration(), MessagesConfiguration.class, new File("messages.json"));
+            loadMessages();
         } catch (IOException e) {
-            getLogger().log(Level.CONFIG, "Error loading messages config");
+            getLogger().log(Level.SEVERE, "Error loading messages config");
             e.printStackTrace();
         }
         ThreadFactory factory = ((ThreadPoolExecutor) getExecutorService()).getThreadFactory();
@@ -339,6 +337,26 @@ public final class RedisBungee extends Plugin {
 
             pool.destroy();
         }
+    }
+
+    private void loadMessages() throws IOException{
+        if (!getDataFolder().exists()) {
+            getDataFolder().mkdir();
+        }
+
+        File file = new File(getDataFolder(), "messages.yml");
+
+        if (!file.exists()) {
+            file.createNewFile();
+            try (InputStream in = getResourceAsStream("example_messages.yml");
+                 OutputStream out = new FileOutputStream(file)) {
+                ByteStreams.copy(in, out);
+            }
+        }
+
+        final Configuration configuration = ConfigurationProvider.getProvider(YamlConfiguration.class).load(file);
+
+        messagesConfiguration = new MessagesConfiguration(configuration);
     }
 
     private void loadConfig() throws IOException, JedisConnectionException {

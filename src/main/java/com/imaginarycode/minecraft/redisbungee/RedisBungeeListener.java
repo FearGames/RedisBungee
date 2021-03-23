@@ -9,12 +9,9 @@ import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 import com.imaginarycode.minecraft.redisbungee.events.PubSubMessageEvent;
 import com.imaginarycode.minecraft.redisbungee.util.RedisCallable;
-import lombok.AllArgsConstructor;
 import net.md_5.bungee.api.AbstractReconnectHandler;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
-import net.md_5.bungee.api.chat.ComponentBuilder;
-import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.connection.Server;
@@ -52,8 +49,8 @@ public class RedisBungeeListener implements Listener {
     public RedisBungeeListener(RedisBungee plugin, List<InetAddress> exemptAddresses){
         this.plugin = plugin;
         this.exemptAddresses = exemptAddresses;
-        ALREADY_LOGGED_IN = plugin.getMessagesConfiguration().getKickMessages().getAlreadyConnectedMessage();
-        ONLINE_MODE_RECONNECT = plugin.getMessagesConfiguration().getKickMessages().getOnlineModeReconnect();
+        ALREADY_LOGGED_IN = plugin.getMessagesConfiguration().getAlreadyConnectedMessage();
+        ONLINE_MODE_RECONNECT = plugin.getMessagesConfiguration().getOnlineModeReconnectMessage();
     }
 
     @EventHandler(priority = EventPriority.LOWEST)

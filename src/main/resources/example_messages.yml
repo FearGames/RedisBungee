@@ -1,0 +1,12 @@
+already-connected: |
+  &cYou are already logged on to this server
+
+
+  &7It may help to try logging in again in a few minutes.
+  If this does not resolve your issue, please contact staff.
+
+online-mode-reconnect: |
+  &cWhoops! You need to reconnect.
+
+  &7We found someone online using your username. They were kicked and you may reconnect.
+  If this does not work, please contact staff.
